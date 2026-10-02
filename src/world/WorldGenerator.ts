@@ -224,6 +224,13 @@ function placeVegetation(seed: number, sampler: TerrainSampler, blocks: Uint8Arr
       const density = isDesert ? BIOMES[Biome.DESERT].treeDensity * 4 : BIOMES[info.biome].treeDensity;
       const threshold = 1 - density;
       if (density <= 0 || score <= threshold) continue;
+      // Root validity must depend only on world coordinates (not on which chunk we're generating) so that
+      // overhanging leaves in a neighbouring chunk always agree with the trunk's chunk.
+      const surf = surfaceFor(info, x, z, seed);
+      const okSurface = isDesert ? surf.top === B.SAND : surf.top === B.GRASS || surf.top === B.SNOWY_GRASS;
+      if (!okSurface) continue;
+      const entrance = sampler.misc.noise2(x * 0.02 + 40, z * 0.02 - 40) > 0.55;
+      if (entrance && info.height >= 3 && isCave(sampler, x, info.height, z)) continue; // cave mouth carved the root block
       // Spacing: skip if a stronger candidate lies within TREE_SPACING (depends only on hashes -> chunk independent).
       let blocked = false;
       for (let dz = -TREE_SPACING; dz <= TREE_SPACING && !blocked; dz++) {
@@ -250,17 +257,7 @@ function put(blocks: Uint8Array, wx0: number, wz0: number, x: number, y: number,
   blocks[i] = id;
 }
 
-function surfaceOk(blocks: Uint8Array, wx0: number, wz0: number, x: number, y: number, z: number): number {
-  // Returns the block under the tree if the root column lies inside this chunk, else -1 (skip check).
-  const lx = x - wx0;
-  const lz = z - wz0;
-  if (lx < 0 || lx >= CHUNK_SIZE || lz < 0 || lz >= CHUNK_SIZE) return -1;
-  return blocks[lx | (lz << 4) | (y << 8)];
-}
-
 function growTree(blocks: Uint8Array, x: number, base: number, z: number, wx0: number, wz0: number, rng: () => number, biome: number) {
-  const under = surfaceOk(blocks, wx0, wz0, x, base, z);
-  if (under !== -1 && under !== B.GRASS && under !== B.SNOWY_GRASS && under !== B.DIRT) return;
   const spruce = biome === Biome.SNOWY_PLAINS || biome === Biome.SNOWY_MOUNTAINS || (biome === Biome.MOUNTAINS && rng() < 0.6);
   if (spruce) {
     const trunk = 6 + Math.floor(rng() * 4);
@@ -294,8 +291,6 @@ function growTree(blocks: Uint8Array, x: number, base: number, z: number, wx0: n
 }
 
 function growCactus(blocks: Uint8Array, x: number, base: number, z: number, wx0: number, wz0: number, rng: () => number) {
-  const under = surfaceOk(blocks, wx0, wz0, x, base, z);
-  if (under !== -1 && under !== B.SAND) return;
   const hgt = 1 + Math.floor(rng() * 3);
   for (let i = 1; i <= hgt; i++) put(blocks, wx0, wz0, x, base + i, z, B.CACTUS, true);
 }

@@ -256,3 +256,27 @@ describe('saving', () => {
     expect(s.bindings.forward).toBe('KeyW');
   });
 });
+
+describe('vegetation across chunk borders', () => {
+  it('every leaf block that overhangs a chunk border has a trunk-connected tree (no orphan canopies)', () => {
+    // Orphan check: for each leaf cell, a wood block must exist within 7 blocks below/around it in world space.
+    const cfg = { seed: 424242, type: 'normal' as const };
+    const chunks = new Map<string, Uint8Array>();
+    for (let cx = -6; cx <= 6; cx++) for (let cz = -6; cz <= 6; cz++) chunks.set(`${cx},${cz}`, generateChunk(cfg, cx, cz).blocks);
+    const get = (x: number, y: number, z: number) => { const c = chunks.get(`${Math.floor(x / 16)},${Math.floor(z / 16)}`); return c ? c[(x & 15) | ((z & 15) << 4) | (y << 8)] : -1; };
+    let leaves = 0, orphans = 0;
+    for (let cx = -4; cx <= 4; cx++) for (let cz = -4; cz <= 4; cz++) {
+      const c = chunks.get(`${cx},${cz}`)!;
+      for (let i = 0; i < c.length; i++) {
+        if (c[i] !== B.LEAVES) continue;
+        leaves++;
+        const x = cx * 16 + (i & 15), z = cz * 16 + ((i >> 4) & 15), y = i >> 8;
+        let found = false;
+        for (let dy = 0; dy <= 8 && !found; dy++) for (let dx = -4; dx <= 4 && !found; dx++) for (let dz = -4; dz <= 4; dz++) if (get(x + dx, y - dy, z + dz) === B.WOOD) { found = true; break; }
+        if (!found) orphans++;
+      }
+    }
+    expect(leaves).toBeGreaterThan(500);
+    expect(orphans).toBe(0);
+  });
+});
