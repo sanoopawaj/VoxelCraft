@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Voxel World</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%233dd6c6' d='M8 1l7 4v6l-7 4-7-4V5z'/%3E%3Cpath fill='%23ffb84d' d='M8 1l7 4-7 4-7-4z'/%3E%3C/svg%3E" />
+  <style>
+    :root {
+      --bg: #0e1620; --panel: rgba(16, 26, 38, 0.92); --panel2: #182636; --line: #2c4259;
+      --accent: #ffb84d; --accent2: #3dd6c6; --text: #e6eef6; --muted: #8aa0b4; --danger: #ff6b5e;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: var(--text);
+      font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif; user-select: none; -webkit-user-select: none; }
+    canvas#game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
+    .hidden { display: none !important; }
+
+    /* ---------- screens ---------- */
+    .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; }
+    .screen.menu-bg { background: radial-gradient(ellipse at 50% 20%, #1d3a52 0%, #0e1620 70%); overflow: hidden; }
+    .screen.dim { background: rgba(5, 10, 16, 0.62); backdrop-filter: blur(3px); }
+    .cubes { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .cubes i { position: absolute; width: 36px; height: 36px; background: linear-gradient(135deg, #3dd6c6, #1d7f8a); opacity: 0.18;
+      transform: rotate(45deg) skew(10deg, 10deg); animation: floaty linear infinite; border: 2px solid rgba(255,255,255,.15); }
+    @keyframes floaty { from { transform: translateY(110vh) rotate(0deg); } to { transform: translateY(-20vh) rotate(360deg); } }
+    .title { font-size: clamp(40px, 9vw, 96px); font-weight: 900; letter-spacing: 6px; margin: 0 0 6px; color: #ffe2a8;
+      text-shadow: 0 1px 0 #ffb84d, 0 2px 0 #e8962c, 0 3px 0 #c97a1e, 0 4px 0 #a86114, 0 5px 0 #864c0f, 0 6px 0 #5d3409, 0 12px 18px rgba(0,0,0,.55);
+      text-align: center; }
+    .title span { color: #8ff3e6; text-shadow: 0 1px 0 #3dd6c6, 0 2px 0 #2cb3a5, 0 3px 0 #219486, 0 4px 0 #19776b, 0 5px 0 #125a51, 0 6px 0 #0b3b35, 0 12px 18px rgba(0,0,0,.55); }
+    .subtitle { color: var(--muted); letter-spacing: 3px; margin-bottom: 28px; font-size: 14px; text-transform: uppercase; }
+    .stack { display: flex; flex-direction: column; gap: 10px; width: min(360px, 88vw); }
+    button, .btn { font: inherit; font-weight: 700; font-size: 16px; padding: 12px 18px; color: var(--text); cursor: pointer;
+      background: linear-gradient(#2a4560, #1c3248); border: 2px solid #3d5f7f; border-bottom-width: 4px; border-radius: 4px;
+      letter-spacing: 1px; transition: transform .05s, filter .1s; }
+    button:hover { filter: brightness(1.25); border-color: var(--accent2); }
+    button:active { transform: translateY(2px); border-bottom-width: 2px; }
+    button.primary { background: linear-gradient(#e8a23a, #c27a1a); border-color: #ffd28a; color: #1b1205; }
+    button.danger { background: linear-gradient(#a8423a, #7c2a24); border-color: #e0827a; }
+    button.small { padding: 6px 10px; font-size: 13px; }
+    button:disabled { opacity: .45; cursor: default; filter: none; }
+    .panel { background: var(--panel); border: 2px solid var(--line); border-radius: 6px; padding: 22px; width: min(640px, 94vw); max-height: 88vh; overflow: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+    .panel h2 { margin: 0 0 14px; font-size: 22px; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; }
+    .row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+    .row > label { flex: 0 0 190px; color: var(--muted); font-size: 14px; }
+    .row input[type=range] { flex: 1; accent-color: var(--accent2); }
+    .row .val { width: 54px; text-align: right; font-variant-numeric: tabular-nums; font-size: 14px; }
+    input[type=text], select { flex: 1; font: inherit; padding: 9px 10px; color: var(--text); background: #0b121b; border: 2px solid var(--line); border-radius: 4px; }
+    input[type=text]:focus, select:focus { outline: none; border-color: var(--accent2); }
+    input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent2); }
+    .footer { display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end; }
+    .world-item { display: flex; align-items: center; gap: 12px; padding: 12px; margin: 8px 0; background: var(--panel2); border: 2px solid var(--line); border-radius: 4px; }
+    .world-item .info { flex: 1; min-width: 0; }
+    .world-item .name { font-weight: 800; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .world-item .meta { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+    .world-item.bad { border-color: var(--danger); }
+    .empty { color: var(--muted); text-align: center; padding: 24px 0; }
+    .keys { width: 100%; border-collapse: collapse; }
+    .keys td { padding: 6px 4px; border-bottom: 1px solid var(--line); font-size: 14px; }
+    .keys td:first-child { color: var(--muted); }
+    kbd { background: #0b121b; border: 2px solid var(--line); border-bottom-width: 3px; border-radius: 4px; padding: 2px 8px; font-family: inherit; font-weight: 700; min-width: 34px; display: inline-block; text-align: center; }
+    .bar { width: min(480px, 80vw); height: 18px; background: #0b121b; border: 2px solid var(--line); border-radius: 4px; overflow: hidden; margin: 14px 0; }
+    .bar > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent2), #8ff3e6); transition: width .12s; }
+    .loadtext { color: var(--muted); letter-spacing: 1px; }
+    .hint { color: var(--muted); font-size: 12.5px; margin-top: 8px; }
+    .toastmsg { color: var(--danger); font-size: 13px; margin-top: 8px; min-height: 18px; }
+
+    /* ---------- HUD ---------- */
+    #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+    #crosshair { position: absolute; left: 50%; top: 50%; width: 20px; height: 20px; transform: translate(-50%, -50%); }
+    #crosshair::before, #crosshair::after { content: ""; position: absolute; background: rgba(255,255,255,.85); mix-blend-mode: difference; }
+    #crosshair::before { left: 9px; top: 2px; width: 2px; height: 16px; }
+    #crosshair::after { top: 9px; left: 2px; height: 2px; width: 16px; }
+    #hotbarwrap { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    #itemname { height: 22px; font-weight: 800; text-shadow: 0 2px 4px #000, 0 0 2px #000; opacity: 0; transition: opacity .4s; letter-spacing: 1px; }
+    #healthrow { align-self: flex-start; display: flex; align-items: center; gap: 8px; }
+    #healthbar { width: 180px; height: 12px; background: rgba(0,0,0,.6); border: 2px solid #000; border-radius: 3px; overflow: hidden; }
+    #healthbar > div { height: 100%; width: 100%; background: linear-gradient(#ff7a6e, #d4382c); transition: width .15s; }
+    #healthtext { font-weight: 800; font-size: 13px; text-shadow: 0 1px 3px #000; }
+    .slots { display: flex; gap: 3px; padding: 4px; background: rgba(8, 14, 22, .72); border: 2px solid #000; border-radius: 4px; }
+    .slot { position: relative; width: 48px; height: 48px; background: rgba(60, 80, 100, .45); border: 2px solid rgba(0,0,0,.65); border-radius: 3px; display: flex; align-items: center; justify-content: center; }
+    .slot img { width: 36px; height: 36px; image-rendering: pixelated; pointer-events: none; }
+    .slot .cnt { position: absolute; right: 3px; bottom: 1px; font-size: 13px; font-weight: 900; text-shadow: 0 0 3px #000, 1px 1px 0 #000, -1px -1px 0 #000; }
+    .slot .num { position: absolute; left: 3px; top: 0; font-size: 10px; color: rgba(255,255,255,.55); font-weight: 700; }
+    .slot.sel { border-color: #fff; box-shadow: 0 0 0 2px var(--accent), 0 0 12px rgba(255,184,77,.55); background: rgba(255, 220, 150, .22); z-index: 1; }
+    #coords { position: absolute; left: 10px; top: 10px; font-weight: 800; font-size: 14px; text-shadow: 0 1px 3px #000, 0 0 2px #000; line-height: 1.35; white-space: pre; }
+    #debug { position: absolute; right: 10px; top: 10px; font: 12px/1.35 ui-monospace, Consolas, monospace; background: rgba(0,0,0,.55); padding: 8px 10px; border-radius: 4px; white-space: pre; text-align: left; max-width: 60vw; }
+    #debug b { color: var(--accent); }
+    #messages { position: absolute; left: 10px; bottom: 120px; display: flex; flex-direction: column; gap: 3px; font-size: 14px; text-shadow: 0 1px 3px #000; max-width: 55vw; }
+    #messages div { background: rgba(0,0,0,.45); padding: 3px 8px; border-radius: 3px; }
+    #cmdbox { position: absolute; left: 10px; bottom: 80px; width: min(520px, 70vw); pointer-events: auto; }
+    #cmdbox input { width: 100%; font: 14px ui-monospace, Consolas, monospace; background: rgba(0,0,0,.7); }
+    #water, #flash, #night { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+    #water { background: rgba(30, 90, 200, 0.22); opacity: 0; transition: opacity .1s; }
+    #flash { background: radial-gradient(ellipse at center, transparent 40%, rgba(220, 20, 20, .65)); opacity: 0; transition: opacity .35s; }
+    #flash.on { opacity: 1; transition: none; }
+
+    /* ---------- inventory ---------- */
+    #inventory .panel { width: min(980px, 96vw); display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+    #invgrid .slots { flex-wrap: wrap; width: max-content; }
+    #invgrid .slot { cursor: pointer; }
+    #invgrid .slot:hover { background: rgba(130, 170, 210, .35); }
+    #invgrid .label { color: var(--muted); font-size: 12px; margin: 10px 0 4px; letter-spacing: 1px; text-transform: uppercase; }
+    #invgrid .gridrow { display: grid; grid-template-columns: repeat(9, 48px); gap: 3px; padding: 4px; background: rgba(8,14,22,.72); border: 2px solid #000; border-radius: 4px; width: max-content; }
+    #recipes { display: flex; flex-direction: column; gap: 6px; max-height: 60vh; overflow: auto; }
+    .recipe { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--panel2); border: 2px solid var(--line); border-radius: 4px; cursor: pointer; }
+    .recipe.can { border-color: var(--accent2); }
+    .recipe.can:hover { background: #20384e; }
+    .recipe:not(.can) { opacity: .6; cursor: default; }
+    .recipe img { width: 28px; height: 28px; image-rendering: pixelated; }
+    .recipe .out { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 13px; flex: 1; }
+    .recipe .ing { display: flex; gap: 6px; font-size: 12px; }
+    .recipe .ing span { display: flex; align-items: center; gap: 2px; }
+    .recipe .ing img { width: 18px; height: 18px; }
+    .recipe .ing .miss { color: var(--danger); font-weight: 800; }
+    #cursoritem { position: fixed; pointer-events: none; z-index: 50; width: 40px; height: 40px; transform: translate(-50%, -50%); }
+    #cursoritem img { width: 100%; height: 100%; image-rendering: pixelated; }
+    #cursoritem .cnt { position: absolute; right: -4px; bottom: -2px; font-size: 14px; font-weight: 900; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; }
+    #tooltip { position: fixed; z-index: 60; pointer-events: none; background: rgba(10,6,24,.95); border: 2px solid #4a3a7a; padding: 4px 8px; border-radius: 3px; font-size: 13px; font-weight: 700; }
+    #confirm .panel { width: min(420px, 92vw); }
+    @media (max-width: 800px) { #inventory .panel { grid-template-columns: 1fr; } .slot { width: 40px; height: 40px; } #invgrid .gridrow { grid-template-columns: repeat(9, 40px); } }
+  </style>
+</head>
+<body>
+  <canvas id="game" tabindex="0"></canvas>
+  <div id="water"></div><div id="flash"></div>
+
+  <div id="hud" class="hidden">
+    <div id="crosshair"></div>
+    <div id="coords"></div>
+    <div id="debug" class="hidden"></div>
+    <div id="messages"></div>
+    <div id="cmdbox" class="hidden"><input id="cmdinput" type="text" autocomplete="off" spellcheck="false" placeholder="/give stone 64   /time set night   /tp 0 80 0   /help" /></div>
+    <div id="hotbarwrap">
+      <div id="itemname"></div>
+      <div id="healthrow"><div id="healthbar"><div></div></div><span id="healthtext">100</span></div>
+      <div class="slots" id="hotbar"></div>
+    </div>
+  </div>
+
+  <!-- Main menu -->
+  <div id="main" class="screen menu-bg hidden">
+    <div class="cubes" id="cubes"></div>
+    <h1 class="title">VOXEL <span>WORLD</span></h1>
+    <div class="subtitle">a block-built sandbox</div>
+    <div class="stack">
+      <button class="primary" id="btn-single">Single Player</button>
+      <button id="btn-settings">Settings</button>
+      <button id="btn-controls">Controls</button>
+      <button id="btn-fullscreen">Fullscreen</button>
+    </div>
+    <div class="hint" style="margin-top:22px">Procedural worlds · Caves · Biomes · Day &amp; Night</div>
+  </div>
+
+  <!-- World list -->
+  <div id="worlds" class="screen menu-bg hidden">
+    <div class="panel">
+      <h2>Select World</h2>
+      <div id="worldlist"></div>
+      <div class="footer">
+        <button id="btn-worlds-back">Back</button>
+        <button class="primary" id="btn-newworld">New World</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create world -->
+  <div id="create" class="screen menu-bg hidden">
+    <div class="panel">
+      <h2>Create World</h2>
+      <div class="row"><label>World name</label><input type="text" id="cw-name" maxlength="40" value="New World" /></div>
+      <div class="row"><label>Seed</label><input type="text" id="cw-seed" placeholder="leave blank for a random seed" />
+        <button class="small" id="cw-random" title="Roll a random seed">Random</button><button class="small" id="cw-copy">Copy</button></div>
+      <div class="row"><label>World type</label>
+        <select id="cw-type"><option value="normal">Normal (procedural)</option><option value="test">Test world (flat, all blocks, debug)</option></select></div>
+      <div class="hint">The same seed always generates the same terrain. Numbers are used exactly; text is hashed.</div>
+      <div class="footer"><button id="btn-create-back">Cancel</button><button class="primary" id="btn-create-go">Create World</button></div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div id="settings" class="screen dim menu-bg hidden"><div class="panel"><h2>Settings</h2><div id="settingsbody"></div>
+    <div class="footer"><button class="primary" id="btn-settings-back">Done</button></div></div></div>
+
+  <!-- Controls -->
+  <div id="controls" class="screen dim menu-bg hidden"><div class="panel"><h2>Controls</h2>
+    <table class="keys" id="keytable"></table>
+    <div class="hint">Click a key to rebind it, then press the new key (Esc cancels).</div>
+    <div class="footer"><button id="btn-controls-reset">Reset to defaults</button><button class="primary" id="btn-controls-back">Done</button></div></div></div>
+
+  <!-- Loading -->
+  <div id="loading" class="screen menu-bg hidden">
+    <h1 class="title" style="font-size:clamp(28px,5vw,52px)">Generating World...</h1>
+    <div class="loadtext" id="load-seed">Seed: —</div>
+    <div class="bar"><div id="load-bar"></div></div>
+    <div class="loadtext" id="load-text">Generating terrain...</div>
+  </div>
+
+  <!-- Pause -->
+  <div id="pause" class="screen dim hidden"><div class="panel" style="width:min(380px,92vw)"><h2>Paused</h2>
+    <div class="stack" style="width:100%">
+      <button class="primary" id="btn-resume">Resume</button>
+      <button id="btn-pause-settings">Settings</button>
+      <button id="btn-pause-controls">Controls</button>
+      <button id="btn-save">Save</button>
+      <button id="btn-mainmenu">Main Menu</button>
+    </div>
+    <div class="hint" id="pause-info" style="margin-top:14px"></div>
+    <div class="row" style="margin-bottom:0"><button class="small" id="btn-copyseed">Copy seed</button><span class="hint" id="pause-status" style="margin:0"></span></div>
+  </div></div>
+
+  <!-- Death -->
+  <div id="death" class="screen hidden" style="background:rgba(120,10,10,.55)">
+    <h1 class="title" style="color:#ffb0a8;font-size:clamp(34px,7vw,72px)">You Died</h1>
+    <div class="subtitle" id="death-reason"></div>
+    <div class="stack"><button class="primary" id="btn-respawn">Respawn</button><button id="btn-death-menu">Main Menu</button></div>
+  </div>
+
+  <!-- Inventory -->
+  <div id="inventory" class="screen dim hidden">
+    <div class="panel">
+      <div id="invgrid"><h2>Inventory</h2>
+        <div class="label">Backpack</div><div class="gridrow" id="inv-main"></div>
+        <div class="label">Hotbar</div><div class="gridrow" id="inv-hot"></div>
+        <div class="hint">Left-click: pick up / place / swap · Right-click: split / place one · Shift-click: quick move · Click outside: drop held</div>
+      </div>
+      <div><h2>Crafting</h2><div id="recipes"></div></div>
+    </div>
+  </div>
+  <div id="cursoritem" class="hidden"></div>
+  <div id="tooltip" class="hidden"></div>
+
+  <!-- Confirm -->
+  <div id="confirm" class="screen dim hidden" style="z-index:40"><div class="panel"><h2 id="confirm-title">Confirm</h2><div id="confirm-text" class="hint" style="font-size:15px;color:var(--text)"></div>
+    <div class="footer"><button id="confirm-no">Cancel</button><button class="danger" id="confirm-yes">Delete</button></div></div></div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
