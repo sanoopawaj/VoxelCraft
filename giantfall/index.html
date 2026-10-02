@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GIANTFALL - Build an empire. Slay the Giant.</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23161b2e'/%3E%3Cpath d='M3 13l3-8 2 4 2-6 3 10z' fill='%23ffd24a'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div id="hud-tl">
+      <div class="portrait"><div id="lvl-badge">1</div></div>
+      <div class="bars">
+        <div class="bar hp"><div id="hp-fill"></div><span id="hp-text"></span></div>
+        <div class="bar stam"><div id="stam-fill"></div></div>
+        <div class="bar xp"><div id="xp-fill"></div><span id="xp-text"></span></div>
+        <div id="rank-text"></div>
+      </div>
+    </div>
+    <div id="hud-tr">
+      <div id="coins"><span class="coin-ico"></span><b id="coin-val">0</b></div>
+      <div id="region-text">Greenlands</div>
+      <div id="clock-text">Day 1</div>
+      <div id="mini-wrap"><canvas id="mini" width="150" height="150"></canvas></div>
+      <div id="rp-text" class="small-note"></div>
+    </div>
+    <div id="tracker"></div>
+    <div id="bossbar" class="hidden"><div id="boss-name"></div><div class="bar boss"><div id="boss-fill"></div></div><div id="boss-phase"></div></div>
+    <div id="banner" class="hidden"><div id="banner-title"></div><div id="banner-sub"></div></div>
+    <div id="eventbar" class="hidden"></div>
+    <div id="toasts"></div>
+    <div id="quickbar"></div>
+    <div id="hint-keys">I Inventory · C Craft · T Tycoon · B Build · J Quests · M Map · K Skills · Esc Menu</div>
+  </div>
+
+  <div id="overlay" class="hidden"></div>
+  <div id="panel" class="hidden"><div id="panel-box"><div id="panel-head"><h2 id="panel-title"></h2><div id="panel-tabs"></div><button id="panel-close" class="x">✕</button></div><div id="panel-body"></div></div></div>
+  <div id="modal" class="hidden"><div id="modal-box"></div></div>
+  <div id="tip" class="hidden"></div>
+  <script src="js/util.js"></script>
+  <script src="js/data_items.js"></script>
+  <script src="js/data_world.js"></script>
+  <script src="js/data_game.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/economy.js"></script>
+  <script src="js/crafting.js"></script>
+  <script src="js/tycoon.js"></script>
+  <script src="js/quests.js"></script>
+  <script src="js/events.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/combat.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/dungeon.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/ui_panels.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
