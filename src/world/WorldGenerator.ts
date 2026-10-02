@@ -20,8 +20,8 @@ export interface OreDef { block: number; attempts: number; size: number; minY: n
 export const ORES: OreDef[] = [
   { block: B.COAL_ORE, attempts: 22, size: 9, minY: 4, maxY: 96 },
   { block: B.IRON_ORE, attempts: 14, size: 6, minY: 4, maxY: 64 },
-  { block: B.GOLD_ORE, attempts: 5, size: 5, minY: 3, maxY: 34 },
-  { block: B.DIAMOND_ORE, attempts: 4, size: 4, minY: 2, maxY: 18 },
+  { block: B.GOLD_ORE, attempts: 4, size: 5, minY: 3, maxY: 34 },
+  { block: B.DIAMOND_ORE, attempts: 3, size: 4, minY: 2, maxY: 18 },
 ];
 
 export interface ColumnInfo {

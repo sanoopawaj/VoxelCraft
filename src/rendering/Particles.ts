@@ -13,6 +13,7 @@ export class Particles {
   private life = new Float32Array(MAX);
   private size = new Float32Array(MAX);
   private next = 0;
+  private active = 0;
   private m = new THREE.Matrix4();
   private q = new THREE.Quaternion();
   private s = new THREE.Vector3();
@@ -31,6 +32,7 @@ export class Particles {
     const i = this.next++ % MAX;
     this.px[i] = x; this.py[i] = y; this.pz[i] = z;
     this.vx[i] = vx; this.vy[i] = vy; this.vz[i] = vz;
+    if (this.life[i] <= 0) this.active++; // recycling a live slot must not double count
     this.life[i] = life; this.size[i] = size;
     const k = 0.75 + Math.random() * 0.25;
     this.mesh.setColorAt(i, this.c.setRGB(r * k, g * k, b * k));
@@ -60,10 +62,11 @@ export class Particles {
 
   update(dt: number, brightness: number) {
     (this.mesh.material as THREE.MeshBasicMaterial).color.setScalar(0.35 + 0.65 * brightness);
+    if (this.active <= 0) return;
     for (let i = 0; i < MAX; i++) {
       if (this.life[i] <= 0) continue;
       this.life[i] -= dt;
-      if (this.life[i] <= 0) { this.m.makeScale(0, 0, 0); this.mesh.setMatrixAt(i, this.m); continue; }
+      if (this.life[i] <= 0) { this.active--; this.m.makeScale(0, 0, 0); this.mesh.setMatrixAt(i, this.m); continue; }
       this.vy[i] -= 14 * dt;
       const nx = this.px[i] + this.vx[i] * dt, ny = this.py[i] + this.vy[i] * dt, nz = this.pz[i] + this.vz[i] * dt;
       if (this.world.isSolidForCollision(Math.floor(nx), Math.floor(ny), Math.floor(nz))) {

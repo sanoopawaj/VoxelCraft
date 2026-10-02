@@ -4,6 +4,7 @@ import { chunkKey } from '../utilities/MathUtil';
 import { buildAtlas } from './TextureAtlas';
 import { installAtlas, type ChunkMeshData, type MeshBuffers } from './ChunkMesher';
 import { skyAt, type SkyState } from './DayNight';
+import { HeldItem } from './HeldItem';
 
 const CHUNK_VERT = /* glsl */ `
 attribute vec4 aColor;
@@ -37,7 +38,7 @@ varying vec4 vColor;
 varying vec2 vLight;
 varying float vDist;
 varying vec3 vWorld;
-float curve(float l) { return pow(0.8, 15.0 - l * 15.0); }
+float curve(float l) { return 0.07 + 0.93 * pow(0.8, 15.0 - l * 15.0); }
 void main() {
   vec4 tex = texture2D(uMap, vUv);
   if (uWater < 0.5 && tex.a < 0.5) discard;
@@ -80,6 +81,7 @@ export class Renderer {
   private projView = new THREE.Matrix4();
   private box = new THREE.Box3();
   private oreMarkers = new Map<number, THREE.Points>();
+  readonly held = new HeldItem();
   sky: SkyState = skyAt(0);
   renderDistance = 6;
   underwater = false;
@@ -106,7 +108,7 @@ export class Renderer {
       uFogColor: { value: new THREE.Color(0.7, 0.83, 0.98) },
       uFogNear: { value: 60 },
       uFogFar: { value: 100 },
-      uMinLight: { value: 0.025 },
+      uMinLight: { value: 0.0 },
       uTime: { value: 0 },
       uWater: { value: 0 },
     };
@@ -211,6 +213,7 @@ export class Renderer {
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / Math.max(1, h);
     this.camera.updateProjectionMatrix();
+    this.held.resize(this.camera.aspect);
   }
 
   setQuality(q: 'fast' | 'fancy') {
@@ -396,8 +399,15 @@ export class Renderer {
   }
 
   render() {
+    this.renderer.autoClear = true;
     this.renderer.render(this.scene, this.camera);
+    if (this.held.visible && this.showHeld) {
+      this.renderer.autoClear = false;
+      this.renderer.clearDepth();
+      this.renderer.render(this.held.scene, this.held.camera);
+    }
   }
+  showHeld = true;
 }
 
 function drawSun(): THREE.CanvasTexture {

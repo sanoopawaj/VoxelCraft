@@ -45,7 +45,7 @@
     .row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
     .row > label { flex: 0 0 190px; color: var(--muted); font-size: 14px; }
     .row input[type=range] { flex: 1; accent-color: var(--accent2); }
-    .row .val { width: 54px; text-align: right; font-variant-numeric: tabular-nums; font-size: 14px; }
+    .row .val { width: 86px; white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; font-size: 14px; }
     input[type=text], select { flex: 1; font: inherit; padding: 9px 10px; color: var(--text); background: #0b121b; border: 2px solid var(--line); border-radius: 4px; }
     input[type=text]:focus, select:focus { outline: none; border-color: var(--accent2); }
     input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent2); }
@@ -89,6 +89,7 @@
     #debug b { color: var(--accent); }
     #messages { position: absolute; left: 10px; bottom: 120px; display: flex; flex-direction: column; gap: 3px; font-size: 14px; text-shadow: 0 1px 3px #000; max-width: 55vw; }
     #messages div { background: rgba(0,0,0,.45); padding: 3px 8px; border-radius: 3px; }
+    #lockhint { position: absolute; left: 50%; top: 58%; transform: translateX(-50%); background: rgba(0,0,0,.6); padding: 8px 16px; border-radius: 4px; font-weight: 800; letter-spacing: 1px; border: 2px solid var(--accent); }
     #cmdbox { position: absolute; left: 10px; bottom: 80px; width: min(520px, 70vw); pointer-events: auto; }
     #cmdbox input { width: 100%; font: 14px ui-monospace, Consolas, monospace; background: rgba(0,0,0,.7); }
     #water, #flash, #night { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
@@ -131,6 +132,7 @@
     <div id="coords"></div>
     <div id="debug" class="hidden"></div>
     <div id="messages"></div>
+    <div id="lockhint" class="hidden">Click to capture the mouse</div>
     <div id="cmdbox" class="hidden"><input id="cmdinput" type="text" autocomplete="off" spellcheck="false" placeholder="/give stone 64   /time set night   /tp 0 80 0   /help" /></div>
     <div id="hotbarwrap">
       <div id="itemname"></div>

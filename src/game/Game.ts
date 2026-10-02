@@ -1,15 +1,15 @@
 import {
-  AUTOSAVE_SECONDS, DEFAULT_RENDER_DISTANCE, FIXED_DT, HOTBAR_SIZE, LOADING_MESH_BUDGET_MS, MAX_SIM_STEPS, MESH_BUDGET_MS,
-  PLAYER_MAX_HEALTH, SPAWN_PRELOAD_RADIUS, START_TIME_TICKS, TICKS_PER_DAY, WORLD_HEIGHT, CHUNK_SIZE, PICKUP_RADIUS,
+  AUTOSAVE_SECONDS, FIXED_DT, LOADING_MESH_BUDGET_MS, MAX_SIM_STEPS, MESH_BUDGET_MS,
+  PLAYER_MAX_HEALTH, SPAWN_PRELOAD_RADIUS, START_TIME_TICKS, TICKS_PER_DAY,
 } from '../utilities/Constants';
-import { clamp, chunkKey, worldToChunk, worldToLocal } from '../utilities/MathUtil';
+import { chunkKey, worldToChunk, worldToLocal } from '../utilities/MathUtil';
 import { AudioManager } from '../audio/AudioManager';
 import { EntityManager } from '../entities/EntityManager';
 import { ItemDrops } from '../entities/ItemDrops';
 import { InputManager, type Action } from '../input/InputManager';
 import { Interaction } from '../interaction/Interaction';
 import { Inventory } from '../items/Inventory';
-import { I, ITEM_DEFS, getItemDef } from '../items/ItemRegistry';
+import { ITEM_DEFS } from '../items/ItemRegistry';
 import { RECIPES } from '../items/Recipes';
 import { Player } from '../player/Player';
 import { formatClock } from '../rendering/DayNight';
@@ -18,7 +18,7 @@ import { Renderer } from '../rendering/Renderer';
 import { SaveManager, modsFromWorld, type WorldMeta, type WorldSave } from '../save/SaveManager';
 import { SettingsStore, type Settings } from '../save/Settings';
 import { UI, type ScreenName } from '../ui/UI';
-import { B, IS_LIQUID, IS_SOLID, getBlockDef } from '../world/BlockRegistry';
+import { B, IS_LIQUID, getBlockDef } from '../world/BlockRegistry';
 import { biomeName } from '../world/Biomes';
 import { ChunkManager } from '../world/ChunkManager';
 import { World } from '../world/World';
@@ -499,6 +499,7 @@ export class Game {
     this.renderer.updateCulling();
     this.updateAudio(dt);
     this.updateHud(dt);
+    this.updateHeldItem(dt);
     this.renderer.render();
     this.stats.calls = this.renderer.renderer.info.render.calls;
     this.stats.tris = this.renderer.renderer.info.render.triangles;
@@ -555,6 +556,23 @@ export class Game {
     } else { this.renderer.setHighlight(null); this.renderer.setCrack(null, 0); }
   }
 
+  private updateHeldItem(dt: number) {
+    const p = this.player, it = this.interaction!;
+    const stack = this.inventory.selectedStack();
+    const l = this.world!.lightAt(Math.floor(p.x), Math.floor(p.y + 1.4), Math.floor(p.z));
+    const lvl = Math.max(((l >> 4) / 15) * this.renderer.sky.skyBrightness, (l & 15) / 15);
+    const shown = this.state === 'PLAYING' || this.state === 'INVENTORY';
+    this.renderer.showHeld = shown && !p.dead;
+    const breaking = this.input.mouseHeld(0) && it.breakProgress > 0;
+    if (breaking && this.swingCooldown <= 0) { this.renderer.held.punch(); this.swingCooldown = 0.38; }
+    if (this.input.mouseClicked(0) && !breaking) this.renderer.held.punch();
+    if (this.input.mouseClicked(2) || (this.input.mouseHeld(2) && this.swingCooldown <= 0 && stack)) { this.renderer.held.kick(); if (this.swingCooldown <= 0) this.swingCooldown = 0.25; }
+    this.swingCooldown -= dt;
+    this.renderer.held.update(dt, stack ? stack.id : -1, 0.12 + 0.88 * Math.pow(lvl, 0.8), this.bobPhase, p.onGround && Math.hypot(p.vx, p.vz) > 0.5, this.settings.value.fov);
+  }
+
+  private swingCooldown = 0;
+
   private updateAudio(dt: number) {
     const p = this.player;
     const sky = this.world!.lightAt(Math.floor(p.x), Math.floor(p.y + 1), Math.floor(p.z)) >> 4;
@@ -564,6 +582,7 @@ export class Game {
   private updateHud(dt: number) {
     const p = this.player;
     this.ui.updateHud(this.inventory, p.health, dt);
+    this.ui.setLockHint(this.state === 'PLAYING' && !this.input.locked);
     this.ui.refreshInventoryIfChanged();
     const w = this.world!, s = this.settings.value;
     if (s.showCoords) {
@@ -598,4 +617,3 @@ export class Game {
   }
 }
 
-export { DEFAULT_RENDER_DISTANCE, HOTBAR_SIZE, WORLD_HEIGHT, CHUNK_SIZE, PICKUP_RADIUS, I, getItemDef, IS_SOLID, clamp };

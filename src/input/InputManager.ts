@@ -62,7 +62,7 @@ export class InputManager {
     if (this.keyCapture && this.keyCapture(e)) { e.preventDefault(); return; }
     const target = e.target as HTMLElement | null;
     const typing = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
-    if (typing) return;
+    if (typing && e.code !== 'Escape') return;
     if (e.code === 'F3' || e.code === 'F4' || e.code === 'Tab') e.preventDefault();
     if (e.repeat) return;
     this.down.add(e.code);

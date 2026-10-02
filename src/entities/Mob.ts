@@ -142,7 +142,7 @@ export class Mob implements Body {
 
     if (spec.hostile) {
       if (chaseAllowed && distP < spec.sight && Math.abs(py - this.y) < 6) {
-        if (this.state !== 'CHASE' && this.state !== 'ATTACK') { this.state = 'NOTICE'; this.stateTimer = 0.4; }
+        if (this.state !== 'CHASE' && this.state !== 'ATTACK' && this.state !== 'NOTICE') { this.state = 'NOTICE'; this.stateTimer = 0.4; }
         if (this.state === 'NOTICE' && this.stateTimer <= 0) this.state = 'CHASE';
         if (this.state === 'CHASE' || this.state === 'ATTACK') {
           this.headingYaw = Math.atan2(-dxp, -dzp);

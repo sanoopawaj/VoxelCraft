@@ -1,4 +1,4 @@
-import { ATTACK_DISTANCE, INTERACTION_DISTANCE } from '../utilities/Constants';
+import { ATTACK_DISTANCE, INTERACTION_DISTANCE, WORLD_HEIGHT } from '../utilities/Constants';
 import type { AudioManager } from '../audio/AudioManager';
 import type { EntityManager } from '../entities/EntityManager';
 import type { ItemDrops } from '../entities/ItemDrops';
@@ -107,7 +107,7 @@ export class Interaction {
     const px = hit.x + hit.nx, py = hit.y + hit.ny, pz = hit.z + hit.nz;
     const cur = world.getBlock(px, py, pz);
     if (!getBlockDef(cur).replaceable) return false;
-    if (py < 0 || py >= 128) return false;
+    if (py < 0 || py >= WORLD_HEIGHT) return false;
     const bdef = getBlockDef(def.blockId);
     if (bdef.solid && this.intersectsPlayer(px, py, pz)) return false;
     if (bdef.shape === 'torch' && !IS_SOLID[world.getBlock(px, py - 1, pz)]) return false;

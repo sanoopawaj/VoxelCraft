@@ -64,4 +64,19 @@ describe('mesher', () => {
     buildChunkMesh(w, c1);
     expect(c1.light![(30 << 8) | (5 << 4) | 0] & 15).toBeGreaterThan(10);
   });
+  it('digging open the roof of a sealed cave lets daylight in', () => {
+    const w = emptyWorld();
+    for (let x = 0; x < 16; x++) for (let z = 0; z < 16; z++) for (let y = 0; y < 30; y++) w.setBlock(x, y, z, B.STONE);
+    for (let x = 4; x < 9; x++) for (let z = 4; z < 9; z++) for (let y = 10; y < 14; y++) w.setBlock(x, y, z, B.AIR);
+    const c = w.getChunk(0, 0)!;
+    buildChunkMesh(w, c);
+    expect(c.light![(12 << 8) | (6 << 4) | 6] >> 4).toBe(0);
+    for (let y = 14; y < 30; y++) w.setBlock(6, y, 6, B.AIR); // shaft to the sky
+    buildChunkMesh(w, c);
+    const top = c.light![(13 << 8) | (6 << 4) | 6] >> 4;
+    const side = c.light![(13 << 8) | (6 << 4) | 4] >> 4;
+    expect(top).toBe(15);
+    expect(side).toBeGreaterThan(8); // light spreads sideways into the cave
+    expect(side).toBeLessThan(15);
+  });
 });

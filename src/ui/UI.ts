@@ -334,6 +334,8 @@ export class UI {
     if (this.flashTimer > 0) { this.flashTimer -= dt; if (this.flashTimer <= 0) $('flash').classList.remove('on'); }
   }
 
+  setLockHint(on: boolean) { $('lockhint').classList.toggle('hidden', !on); }
+
   setCoords(text: string) { $('coords').textContent = text; }
   setDebug(text: string | null) {
     const d = $('debug');

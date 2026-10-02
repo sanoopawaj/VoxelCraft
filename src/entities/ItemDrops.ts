@@ -11,6 +11,21 @@ interface Drop extends Body {
   id: number; count: number; age: number; delay: number; obj: THREE.Object3D; phase: number; matBucket: number;
 }
 
+/** Atlas-textured cube geometry for a block (shared by dropped items and the held item). */
+export function makeBlockBoxGeometry(blockId: number, size: number): THREE.BufferGeometry {
+  const a = buildAtlas();
+  const def = getBlockDef(blockId);
+  const g = new THREE.BoxGeometry(size, size, size);
+  const uv = g.getAttribute('uv') as THREE.BufferAttribute;
+  // BoxGeometry face order: +X,-X,+Y,-Y,+Z,-Z, 4 vertices each.
+  const names = [def.tex.side, def.tex.side, def.tex.top, def.tex.bottom, def.tex.side, def.tex.side];
+  for (let f = 0; f < 6; f++) {
+    const [u0, v0, u1, v1] = a.uv(names[f]);
+    uv.setXY(f * 4 + 0, u0, v1); uv.setXY(f * 4 + 1, u1, v1); uv.setXY(f * 4 + 2, u0, v0); uv.setXY(f * 4 + 3, u1, v0);
+  }
+  return g;
+}
+
 const BUCKETS = 4;
 const BUCKET_LEVELS = [0.25, 0.5, 0.78, 1];
 
@@ -28,16 +43,7 @@ export class ItemDrops {
   private blockGeometry(blockId: number): THREE.BufferGeometry {
     let g = this.blockGeos.get(blockId);
     if (g) return g;
-    const a = buildAtlas();
-    const def = getBlockDef(blockId);
-    g = new THREE.BoxGeometry(0.28, 0.28, 0.28);
-    const uv = g.getAttribute('uv') as THREE.BufferAttribute;
-    // BoxGeometry face order: +X,-X,+Y,-Y,+Z,-Z, 4 vertices each.
-    const names = [def.tex.side, def.tex.side, def.tex.top, def.tex.bottom, def.tex.side, def.tex.side];
-    for (let f = 0; f < 6; f++) {
-      const [u0, v0, u1, v1] = a.uv(names[f]);
-      uv.setXY(f * 4 + 0, u0, v1); uv.setXY(f * 4 + 1, u1, v1); uv.setXY(f * 4 + 2, u0, v0); uv.setXY(f * 4 + 3, u1, v0);
-    }
+    g = makeBlockBoxGeometry(blockId, 0.28);
     this.blockGeos.set(blockId, g);
     return g;
   }

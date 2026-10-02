@@ -2,13 +2,16 @@
   "name": "voxelcraft",
   "version": "1.0.0",
   "private": true,
+  "description": "Voxel World - an original browser-based voxel sandbox game (Three.js + TypeScript)",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "start": "vite build && vite preview --host 0.0.0.0 --port 4173",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "e2e": "node tools/e2e-smoke.mjs"
   },
   "dependencies": {
     "three": "^0.186.1"
