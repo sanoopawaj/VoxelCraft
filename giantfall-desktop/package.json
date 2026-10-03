@@ -1,0 +1,21 @@
+{
+  "name": "giantfall",
+  "productName": "Giantfall",
+  "version": "1.0.0",
+  "description": "Build an empire. Slay the Giant.",
+  "main": "main.js",
+  "author": "Giantfall",
+  "scripts": {
+    "prepare-game": "node prepare.js",
+    "dist": "node prepare.js && electron-builder --win nsis portable --publish never"
+  },
+  "build": {
+    "appId": "com.giantfall.game",
+    "productName": "Giantfall",
+    "files": ["main.js", "game/**/*"],
+    "win": { "target": ["nsis", "portable"], "signAndEditExecutable": false, "icon": "icon.png" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true },
+    "directories": { "output": "dist" }
+  },
+  "devDependencies": { "electron": "33.2.0", "electron-builder": "25.1.8" }
+}
